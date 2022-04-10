@@ -1,0 +1,14 @@
+apply plugin:'java'
+repositories
+{
+flatDir
+{                               
+dirs '../TMComponents/build/libs'
+}
+
+dependencies
+{
+implementation name:"TMComponents"
+}
+
+}
