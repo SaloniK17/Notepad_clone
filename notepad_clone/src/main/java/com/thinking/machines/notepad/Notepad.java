@@ -7,18 +7,21 @@ import javax.swing.event.*;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.UndoManager;
 import com.thinking.machines.tmcomponents.swing.*;
+import javax.swing.text.*;
+import java.util.*;
 class Notepad extends JFrame
 {
 private static String fileName="Untitled";
 private JMenu fileJMenu,editJMenu,formatJMenu,viewJMenu,helpJMenu;
 private JMenuItem newJMenuItem,newWindowJMenuItem,openJMenuItem,saveJMenuItem,saveAsJMenuItem,printJMenuItem,exitJMenuItem;
-private JMenuItem undoJMenuItem,cutJMenuItem,copyJMenuItem,pasteJMenuItem,deleteJMenuItem,findJMenuItem;
-private JMenuItem fontJMenuItem;
+private JMenuItem undoJMenuItem,cutJMenuItem,copyJMenuItem,pasteJMenuItem,deleteJMenuItem,findJMenuItem,fontColorJMenuItem,backgroundColorJMenuItem;
+private JMenuItem fontJMenuItem,leftAlignJMenuItem;
 private JMenuItem aboutNotepadJMenuItem;
 private JMenuItem zoomInJMenuItem,zoomOutJMenuItem;
 private JCheckBoxMenuItem statusBarJMenuItem,wordWrapJMenuItem;
 private JMenu zoomJMenu;
 private JMenuBar menuBar;
+private JButton drawingPad;
 private Container container;
 private JTextArea textArea;
 private JScrollPane jsp;
@@ -36,13 +39,13 @@ initComponents();
 setAppearance();   
 addListener();
 }
-/*Notepad(String fileName)
+Notepad(String fileName)
 {
 super(fileName+" - Notepad");
 initComponents();
 setAppearance();   
 addListener();
-}*/
+}
 
 private void initComponents()
 {
@@ -78,6 +81,10 @@ findJMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F,ActionEvent.CT
 //format
 wordWrapJMenuItem=new JCheckBoxMenuItem("Word Wrap");
 fontJMenuItem=new JMenuItem("Font...");
+leftAlignJMenuItem=new JMenuItem("Left-Align");
+leftAlignJMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L,ActionEvent.CTRL_MASK));
+fontColorJMenuItem=new JMenuItem("Font-Color");
+backgroundColorJMenuItem=new JMenuItem("Background-Color");
 //view
 statusBarJMenuItem=new JCheckBoxMenuItem("Status Bar");
 zoomInJMenuItem=new JMenuItem("Zoom In");
@@ -93,7 +100,7 @@ formatJMenu=new JMenu("<html>F<u>o</u>rmat</html>");
 viewJMenu=new JMenu("<html><u>V</u>iew</html>");
 zoomJMenu=new JMenu("Zoom");
 helpJMenu=new JMenu("<html><u>H</u>elp</html>");
-
+drawingPad=new JButton("Drawing Pad");
 //menu bar 
 menuBar=new JMenuBar();
 textArea=new JTextArea();
@@ -127,6 +134,11 @@ editJMenu.add(findJMenuItem);
 
 formatJMenu.add(wordWrapJMenuItem);
 formatJMenu.add(fontJMenuItem);
+formatJMenu.add(leftAlignJMenuItem);
+
+formatJMenu.add(fontColorJMenuItem);
+
+formatJMenu.add(backgroundColorJMenuItem);
 
 zoomJMenu.add(zoomInJMenuItem);
 zoomJMenu.add(zoomOutJMenuItem);
@@ -140,12 +152,16 @@ menuBar.add(editJMenu);
 menuBar.add(formatJMenu);
 menuBar.add(viewJMenu);
 menuBar.add(helpJMenu);
+menuBar.add( Box.createHorizontalStrut( 1200) ); 
+menuBar.add(drawingPad);
+
 
 setJMenuBar(menuBar);
 
 container=getContentPane();
 container.setLayout(new BorderLayout());
 textArea.setFont(new Font("Consolas",Font.PLAIN,24));
+
 jsp=new JScrollPane(textArea,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 jsp.setBorder(BorderFactory.createEmptyBorder());
 statusBar.setVisible(false);
@@ -404,6 +420,54 @@ TMFontChooser fontChooser = new TMFontChooser();
        Notepad.this. textArea.setFont(font);
     }
 });
+
+
+this.leftAlignJMenuItem.addActionListener((ae)->{
+try
+{
+int lines=Notepad.this.textArea.getLineCount();
+//ArrayList<String>strings=new ArrayList<>();        
+StringBuffer sb=new StringBuffer();
+for (int i = 0; i < lines; i++)
+        {
+            int start = Notepad.this.textArea.getLineStartOffset(i);
+            int end = Notepad.this.textArea.getLineEndOffset(i);
+
+            String line = Notepad.this.textArea.getText(start, end - start);
+line=leftTrim(line);
+sb.append(line);
+        }
+
+Notepad.this.textArea.selectAll();
+Notepad.this.textArea.replaceSelection(sb.toString());
+}catch(Exception exception)
+{
+System.out.println(exception);
+}
+});
+
+
+
+this.fontColorJMenuItem.addActionListener((ae)->{
+Color fgColor=Notepad.this.textArea.getForeground();
+Color c=JColorChooser.showDialog(Notepad.this.textArea,"Chooser a Color",fgColor);
+if(c!=null)
+{
+Notepad.this.textArea.setForeground(c);
+}
+});
+
+
+this.backgroundColorJMenuItem.addActionListener((ae)->{
+Color bgColor=Notepad.this.textArea.getBackground();
+Color c=JColorChooser.showDialog(Notepad.this.textArea,"Chooser a Color",bgColor);
+if(c!=null)
+{
+Notepad.this.textArea.setBackground(c);
+}
+});
+
+
 this.zoomInJMenuItem.addActionListener((ae)->{
 Font font=Notepad.this.textArea.getFont();
 Notepad.this.textArea.setFont(new Font(font.getName(),font.getStyle(),font.getSize()+2));
@@ -420,13 +484,15 @@ Notepad.this.statusBar.setVisible(Notepad.this.statusBarJMenuItem.isSelected());
 
 
 this.aboutNotepadJMenuItem.addActionListener((ae)->{
-AboutNotepad an=new AboutNotepad();
-an.setVisible(true);
-an.toFront();
+AboutNotepad an=new AboutNotepad(Notepad.this);
 });
+
+this.drawingPad.addActionListener((ae)->{new DrawingPad(Notepad.this);});
 
 
 }// addListener function ends here
+
+
 
 private void fileLoad(String fileName)
 {
@@ -522,6 +588,20 @@ Notepad.this.filePath=saveFile.getAbsolutePath();
 Notepad.this.setTitle(Notepad.this.fileName.substring(0,Notepad.this.fileName.indexOf("."))+"- Notepad");
 }//approve option if ends here
 }
+
+public String leftTrim(String string)
+{
+String newString=null;
+if(string!=null)
+{
+int lengthOfString=string.length();
+int i=0;
+while(i<lengthOfString&& Character.isWhitespace(string.charAt(i)))i++;
+newString=new String(string.substring(i));
+}
+return newString;
+}
+
 
 public static void main(String gg[])
 {

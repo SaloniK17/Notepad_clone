@@ -1,11 +1,11 @@
 package com.thinking.machines.notepad;
 import javax.swing.*;
 import java.awt.*;
-public class AboutNotepad extends JFrame
+public class AboutNotepad extends JDialog
 {
-public AboutNotepad()
+public AboutNotepad(JFrame frame)
 {
-super("About Notepad");
+super(frame,"About Notepad",true);
 setIconImages(null);
 setLayout(null);
 ImageIcon i1=new ImageIcon(this.getClass().getResource("/AboutNotepad/windows_icon.png"));
@@ -33,13 +33,10 @@ add(s);
 add(l2);
 add(l3);
 add(b);
-setDefaultCloseOperation(EXIT_ON_CLOSE);
+setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 setSize(475,430);
 setLocation(100,100);
 setResizable(false);
-}
-public static void main(String g[])
-{
-new AboutNotepad().setVisible(true);
+setVisible(true);
 }
 }
